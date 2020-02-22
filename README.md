@@ -14,6 +14,9 @@ Based on code by Intel Corp. https://sourceforge.net/projects/slicing-by-8 .
 
 IA-32 or x86-64 assembler code has 1,20 CPU clock cycles per byte of data.
 
+This code is used in "The Bat!" email client
+https://www.ritlabs.com/en/products/thebat/
+
 Define PUREPASCAL if you wish to compile Pascal implementation.
 Otherwise, the Assembler implementation will be compiled.
 
