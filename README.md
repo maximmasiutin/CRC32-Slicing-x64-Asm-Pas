@@ -5,7 +5,7 @@ Copyright 2020 Ritlabs, SRL
 
 This code is released under GNU Lesser General Public License (LGPL) v3.
 
-The Slicing-By-8 x86-64 Assembler version and Pascal verion is written by 
+The Slicing-By-8 x86-64 Assembler version and Pascal version is written by
 Maxim Masiutin <max@ritlabs.com>
 
 Based on code written by Aleksandr Sharahov http://guildalfa.ru/alsha/node/2 ;

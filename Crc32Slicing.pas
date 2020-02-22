@@ -6,7 +6,7 @@ Copyright 2020 Ritlabs, SRL
 
 This code is released under GNU Lesser General Public License (LGPL) v3.
 
-The Slicing-By-8 x86-64 Assembler version and Pascal verion is written by 
+The Slicing-By-8 x86-64 Assembler version and Pascal version is written by
 Maxim Masiutin <max@ritlabs.com>
 
 Based on code written by Aleksandr Sharahov http://guildalfa.ru/alsha/node/2 ;
@@ -206,8 +206,8 @@ end;
 // Slicing-by-8 assembler implementation
 // adapted from fast Aleksandr Sharahov version ( http://guildalfa.ru/alsha/node/2 ) released in 2009
 
-// Of that version, second iteration of loop unrolling was removed because testing demosntrated it had no benefit,
-// or even made code slower because of a branch in the middle that could cause branch mispredition penalty.
+// Of that version, second iteration of loop unrolling was removed because testing demonstrated it had no benefit,
+// or even made code slower because of a branch in the middle that could cause branch misprediction penalty.
 
 
 // See also the "High Octane CRC Generation with the Intel Slicing-by-8 Algorithm" white paper published by Intel in 2006
@@ -370,7 +370,7 @@ asm
         push    ebx
         push    esi
 
-        mov     esi, edx // save "lenght" (negative) to esi
+        mov     esi, edx // save "length" (negative) to esi
         mov     edx, eax // now edx has "buf"
         mov     eax, ecx // now eax has "crc"
         mov     ecx, esi // now ecx has "length" (negative)
