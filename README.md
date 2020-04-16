@@ -12,7 +12,7 @@ Based on code written by Aleksandr Sharahov http://guildalfa.ru/alsha/node/2 ;
 Based on code from "Synopse mORMot framework" https://synopse.info/ ;
 Based on code by Intel Corp. https://sourceforge.net/projects/slicing-by-8 .
 
-IA-32 or x86-64 assembler code has 1,20 CPU clock cycles per byte of data.
+IA-32 or x86-64 assembler code has 1,20 CPU clock cycles (on Skylake) per byte of data.
 
 This code is used in "The Bat!" email client
 https://www.ritlabs.com/en/products/thebat/
