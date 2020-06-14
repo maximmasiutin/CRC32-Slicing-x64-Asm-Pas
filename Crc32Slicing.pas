@@ -2,12 +2,13 @@
 
 CRC32 Slicing-By-8 Assembler IA-32 & x86-64 / Pascal implementation
 
-Copyright 2020 Ritlabs, SRL
+Copyright (C) 2020 Ritlabs, SRL. All rights reserved.
+Copyright (C) Maxim Masiutin. All rights reserved.
 
 This code is released under GNU Lesser General Public License (LGPL) v3.
 
 The Slicing-By-8 x86-64 Assembler version and Pascal version is written by
-Maxim Masiutin <max@ritlabs.com>
+Maxim Masiutin <maxim.masiutin@gmail.com>
 
 Based on code written by Aleksandr Sharahov http://guildalfa.ru/alsha/node/2 ;
 Based on code from "Synopse mORMot framework" https://synopse.info/ ;
