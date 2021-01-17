@@ -3,12 +3,12 @@
 CRC32 Slicing-By-8 Assembler IA-32 & x86-64 / Pascal implementation
 
 Copyright (C) 2020 Ritlabs, SRL. All rights reserved.
-Copyright (C) Maxim Masiutin. All rights reserved.
+Copyright (C) 2020-2021 Maxim Masiutin. All rights reserved.
 
 This code is released under GNU Lesser General Public License (LGPL) v3.
 
 The Slicing-By-8 x86-64 Assembler version and Pascal version is written by
-Maxim Masiutin <maxim.masiutin@gmail.com>
+Maxim Masiutin <maxim@masiutin.com>
 
 Based on code written by Aleksandr Sharahov http://guildalfa.ru/alsha/node/2 ;
 Based on code from "Synopse mORMot framework" https://synopse.info/ ;
@@ -16,21 +16,18 @@ Based on code by Intel Corp. https://sourceforge.net/projects/slicing-by-8 .
 
 IA-32 or x86-64 assembler code has 1,20 CPU clock cycles (on Skylake) per byte of data.
 
-This code is used in "The Bat!" email client
-https://www.ritlabs.com/en/products/thebat/
-
 Define PUREPASCAL if you wish to compile Pascal implementation.
 Otherwise, the Assembler implementation will be compiled.
 
 Can be compiled by Delphi or Free Pascal Compiler (FPC).
 
 If you define SLICING_BY_4, the Pascal implementation of Slicing-By-4
-will be compiled instead (there is no assembler implementation 
+will be compiled instead (there is no assembler implementation
 of Slicing-By-4).
 
 The "crc32_slicing" function that has the following inputs:
-buffer (pointer); 
-length (unsigned integer, 32 or 64 bits depending on platform, highest bit must be zero); 
+buffer (pointer);
+length (unsigned integer, 32 or 64 bits depending on platform, highest bit must be zero);
 crc (32-bit unsigned integer) - initial value;
 table (or 4K for Slicing-by-4) (pointer) - the pre-computed look-up table of 8K, see InitCrc32SlicingByNTable in CrcTest.dpr on how to fill this table.
 output: crc (32-bit unsigned integer).
@@ -142,7 +139,7 @@ Slicing-by-8, Delphi (32-bit): 1,82
 Slicing-by-4, Delphi (64-bit): 2,68
 Slicing-by-4, Delphi (32-bit): 2,69
 
-The clock/per/byte ratio of binary produced by Free Pascal Compiler (FPC) 3.0.4 was 
+The clock/per/byte ratio of binary produced by Free Pascal Compiler (FPC) 3.0.4 was
 worse then of that produced by Delphi 10.3.3, so I didn't include the results.
 
 *)
