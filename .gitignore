@@ -1,0 +1,36 @@
+# Delphi/FPC compiled files
+*.exe
+*.dll
+*.dcu
+*.o
+*.ppu
+*.compiled
+*.bpl
+*.dcp
+*.so
+*.dylib
+
+# Delphi project files
+*.dproj.local
+*.identcache
+*.projdata
+*.tvsconfig
+*.dsk
+__history/
+__recovery/
+
+# FPC output
+*.rsj
+link.res
+ppas.bat
+ppas.sh
+
+# IDE files
+*.dproj
+!CrcTest.dproj
+
+# Build directories
+Win32/
+Win64/
+Linux/
+OSX/

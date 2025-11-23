@@ -3,7 +3,7 @@
 CRC32 Slicing-By-8 Assembler IA-32 & x86-64 / Pascal implementation
 
 Copyright (C) 2020 Ritlabs, SRL. All rights reserved.
-Copyright (C) 2020-2021 Maxim Masiutin. All rights reserved.
+Copyright (C) 2020-2025 Maxim Masiutin. All rights reserved.
 
 This code is released under GNU Lesser General Public License (LGPL) v3.
 
@@ -49,6 +49,20 @@ interface
   {$ASMMODE INTEL}
 {$ENDIF}
 
+// Cross-platform 64-bit detection
+{$IFDEF FPC}
+  {$IFDEF CPUX86_64}
+    {$DEFINE CPU64BIT}
+  {$ENDIF}
+{$ELSE}
+  {$IFDEF WIN64}
+    {$DEFINE CPU64BIT}
+  {$ENDIF}
+  {$IFDEF CPUX64}
+    {$DEFINE CPU64BIT}
+  {$ENDIF}
+{$ENDIF}
+
 {$IFDEF SLICING_BY_4}
   {$DEFINE PUREPASCAL}
 {$ENDIF}
@@ -83,8 +97,8 @@ const
       {$IFDEF SLICING_BY_4}
         3
       {$ELSE}
-        {$IFDEF WIN64}
-          7 // under Win64 and Slicing-by-8 we align to 8-byte boundary; otherwise to 4-byte boundary
+        {$IFDEF CPU64BIT}
+          7 // under 64-bit and Slicing-by-8 we align to 8-byte boundary; otherwise to 4-byte boundary
         {$ELSE}
           3
         {$ENDIF}
@@ -97,7 +111,7 @@ var
 
 {$IFNDEF SLICING_BY_4}
   Term2: Cardinal;
-  {$IFDEF WIN64}
+  {$IFDEF CPU64BIT}
     U64: UInt64;
   {$ENDIF}
 {$ENDIF SLICING_BY_4}
@@ -106,7 +120,7 @@ begin
   len := ALength;
   buf := @ABuf;
   Result := crc;
-  if (buf <> nil) and (len > 0) then
+  if (buf <> nil) and (len > 0) and (Acrc32FastTable <> nil) then
   begin
 
 // align source buffer to 4 or 8 bytes boundary
@@ -140,7 +154,7 @@ Slicing-by-4, Delphi (64-bit): 2,68
 Slicing-by-4, Delphi (32-bit): 2,69
 
 The clock/per/byte ratio of binary produced by Free Pascal Compiler (FPC) 3.0.4 was
-worse then of that produced by Delphi 10.3.3, so I didn't include the results.
+worse than that produced by Delphi 10.3.3, so I didn't include the results.
 
 *)
 
@@ -162,7 +176,7 @@ worse then of that produced by Delphi 10.3.3, so I didn't include the results.
 
     while len >= 8 do
     begin
-      {$IFDEF WIN64}
+      {$IFDEF CPU64BIT}
       U64 := PUint64(buf)^;
       Result := Result xor Cardinal(U64);
       Term2 := U64 shr 32;
@@ -227,9 +241,12 @@ end;
 //        3)   r8    ecx
 //        4)   r9    [stack]
 asm
-// rcx has buf, rdx las len, r8 has crc, r9 has table
+// rcx has buf, rdx has len, r8 has crc, r9 has table
 
-        test    rcx, rcx // null pointer comparison
+        test    rcx, rcx // null buffer pointer check
+        jz      @exit
+
+        test    r9, r9   // null table pointer check
         jz      @exit
 
         cmp     rdx, 8
@@ -328,7 +345,123 @@ asm
 end;
 
 
-{$ELSE !WIN64}
+{$ELSE}
+
+{$IFDEF CPUX86_64}
+
+// Linux x86-64 (System V AMD64 ABI)
+// function arguments come in: RDI, RSI, RDX, RCX, R8, R9
+// return - RAX
+// caller-saved (may be destroyed): RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11
+// callee-saved (must preserve): RBX, RBP, R12, R13, R14, R15
+
+//             Linux64
+//             -------
+//        1)   rdi     (buf)
+//        2)   rsi     (len)
+//        3)   rdx     (crc)
+//        4)   rcx     (table)
+ asm
+// rdi has buf, rsi has len, rdx has crc, rcx has table
+
+        test    rdi, rdi // null buffer pointer check
+        jz      @exit
+
+        test    rcx, rcx // null table pointer check
+        jz      @exit
+
+        cmp     rsi, 8
+        jge     @big
+        test    rsi, rsi
+        jle     @exit  // negative value or zero
+
+        mov     eax, edx  // move crc to eax, clear upper bits
+
+// if we have 7 bytes or less, calculate them byte-by-byte
+
+@calc_crc32:
+        xor     al, byte ptr [rdi]
+        inc     rdi
+        movzx   r10d, al
+        shr     eax, 8
+        xor     eax, dword ptr [rcx + r10*4]
+        dec     rsi
+        jnz     @calc_crc32
+        jmp     @exit
+
+@big:
+        mov     eax, edx  // now rax has crc
+
+        neg     rsi       // now we have negative length
+
+// align source buffer by 8 bytes
+        test    dil, 7
+        jz      @aligned
+
+@unaligned:
+        xor     al, byte ptr [rdi]
+        inc     rdi
+        movzx   r10d, al
+        shr     eax, 8
+        xor     eax, dword ptr [rcx + r10*4]
+        inc     rsi
+        test    dil, 7
+        jnz     @unaligned
+
+@aligned:
+        sub     rdi, rsi
+        add     rsi, 8
+        mov     r10, rsi   // now we have negative length in r10
+        jg      @check_tail
+
+@block_loop:
+        mov     esi, eax  // use esi as scratch (rsi no longer needed for length)
+
+        mov     r11, qword ptr[rdi + r10 - 8]
+        xor     esi, r11d
+        mov     r8,  r11
+        shr     r8,  32
+
+        movzx   r11d, r8b
+        shr     r8d, 8
+        mov     eax, dword ptr[r11 * 4 + rcx + 1024 * 3]
+        movzx   r11d, r8b
+        shr     r8d, 8
+        xor     eax, dword ptr[r11 * 4 + rcx + 1024 * 2]
+        movzx   r11d, r8b
+        shr     r8d, 8
+        xor     eax, dword ptr[r11 * 4 + rcx + 1024 * 1]
+        xor     eax, dword ptr[r8  * 4 + rcx + 1024 * 0]
+
+        movzx   r11d, sil
+        shr     esi, 8
+        xor     eax, dword ptr[r11 * 4 + rcx + 1024 * 7]
+        movzx   r11d, sil
+        shr     esi, 8
+        xor     eax, dword ptr[r11 * 4 + rcx + 1024 * 6]
+        movzx   r11d, sil
+        shr     esi, 8
+        xor     eax, dword ptr[r11 * 4 + rcx + 1024 * 5]
+        xor     eax, dword ptr[rsi * 4 + rcx + 1024 * 4]
+
+        add     r10, 8
+        jle     @block_loop
+
+@check_tail:
+        sub     r10, 8
+        jnl     @exit
+
+@tail_loop:
+        movzx   r8, byte[rdi + r10]
+        xor     r8b, al
+        shr     eax, 8
+        xor     eax, dword ptr[r8 * 4 + rcx]
+        inc     r10
+        jnz     @tail_loop
+@exit:
+end;
+
+{$ELSE}
 
 // Under Win32, a call passes first parameter in EAX, second in EDX, third in ECX
 // result is returned in EAX
@@ -349,6 +482,12 @@ asm
         push    edi
         push    ebx
         mov     edi, ss:[ebp + 8] // 8 - stack offset of fourth argument
+        test    edi, edi         // null table pointer check
+        jnz     @calc_crc32
+        mov     eax, ecx         // return initial crc on null table
+        pop     ebx
+        pop     edi
+        jmp     @@exit
 @calc_crc32:
         xor     cl,[eax]
         inc     eax
@@ -374,6 +513,8 @@ asm
         mov     ecx, esi // now ecx has "length" (negative)
 
         mov     esi, ss:[ebp + 8] // 8 - stack offset of fourth argument
+        test    esi, esi         // null table pointer check
+        jz      @@pop_exit
 
 // align by 4 bytes under Win32
         test    dl, 3
@@ -449,6 +590,7 @@ asm
         pop     ebx
 @@exit:
 end;
+{$ENDIF CPUX86_64}
 {$ENDIF WIN64}
 {$endif PUREPASCAL}
 

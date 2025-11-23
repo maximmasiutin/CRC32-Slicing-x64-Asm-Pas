@@ -1,8 +1,14 @@
 program CrcTest;
 
+{$IFDEF FPC}
+  {$mode delphi}
+{$ENDIF}
+
 {$APPTYPE CONSOLE}
 
-{$R *.res}
+{$IFNDEF FPC}
+  {$R *.res}
+{$ENDIF}
 
 uses
   Crc32Slicing in 'Crc32Slicing.pas';
@@ -90,8 +96,22 @@ begin
   Halt(0);
 end;
 
+procedure FreeCrc32SlicingByNTable(var ACrc32SlicingByNTable: PCrc32SlicingByNTable);
+begin
+  if Assigned(ACrc32SlicingByNTable) then
+  begin
+    FreeMem(ACrc32SlicingByNTable, SizeOf(TCrc32SlicingByNTable));
+    ACrc32SlicingByNTable := nil;
+  end;
+end;
+
 begin
   InitCrc32SlicingByNTable(FCrc32IeeeTable, cCrc32IeeePoly);
   InitCrc32SlicingByNTable(FCrc32CastagnoliTable, cCrc32CastagnoliPoly);
-  TestCRC;
+  try
+    TestCRC;
+  finally
+    FreeCrc32SlicingByNTable(FCrc32IeeeTable);
+    FreeCrc32SlicingByNTable(FCrc32CastagnoliTable);
+  end;
 end.
